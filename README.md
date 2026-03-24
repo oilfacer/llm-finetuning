@@ -54,6 +54,71 @@ learning from human feedback (RLHF)  can be used.
 - To maintain stability, ORPO incorporates regularization techniques, such as KL divergence constraints, ensuring the fine-tuned model stays close to the original while aligning with human preferences. By avoiding the complexities of online interaction and exploration, ORPO is resource-efficient and scalable, making it suitable for applications with static datasets.
 - However, its reliance on the quality of the dataset and reward model, along with limited exploration capabilities, are key limitations. ORPO provides a stable and efficient alternative to online reinforcement learning methods like PPO, particularly for tasks where human feedback is available but active exploration is unnecessary or impractical.
 
+## Repository Structure
+
+The repository is organized into four areas under `src/llm_finetuning/`:
+
+| Directory | Contents |
+|-----------|----------|
+| `question_answering/sft/` | SFT training, data creation, and evaluation for HotpotQA, Musique, and TriviaQA |
+| `question_answering/grpo/` | GRPO training and evaluation for HotpotQA, Musique, and TriviaQA |
+| `rlhf/grpo/gsm8k/` | GRPO training for math reasoning on GSM8K across 5 model architectures |
+| `rlhf/{dpo,kto,orpo,ppo}/` | Preference alignment experiments on UltraFeedback |
+| `sft/` | Adapter-based SFT (LoRA, QLoRA, DoRA, P-Tuning, Prefix-Tuning) on generic QA datasets |
+| `med_question_answering/` | Medical QA experiments on BioASQ, MedQA, and PubMedQA |
+
+## SFT vs GRPO Comparison Experiment
+
+The `question_answering/` directory is the primary place to run a controlled SFT-vs-GRPO experiment on a single dataset. All three supported datasets — **HotpotQA**, **Musique**, and **TriviaQA** — have a complete set of scripts for both training methods and evaluation with identical metrics (Exact Match and F1), making a fair comparison straightforward.
+
+### Supported datasets
+
+| Dataset | SFT training | GRPO training | SFT evaluation | GRPO evaluation |
+|---------|:---:|:---:|:---:|:---:|
+| HotpotQA | ✅ | ✅ | ✅ | ✅ |
+| Musique | ✅ | ✅ | ✅ | ✅ |
+| TriviaQA | ✅ | ✅ | ✅ | ✅ |
+
+### Step-by-step: running the comparison (example: HotpotQA)
+
+**1. Prepare the dataset**
+
+```bash
+cd src/llm_finetuning/question_answering/sft
+python data_creation_hotpotqa.py   # creates and uploads the processed dataset
+```
+
+**2. Train with SFT**
+
+```bash
+# Edit train_hotpotqa.yaml to set your dataset name and output directory
+python train_llama3_hotpotqa.py
+```
+
+**3. Train with GRPO**
+
+```bash
+cd ../grpo
+# Edit train_llama_3_hotpotqa.yaml to set your dataset name and output directory
+python train_llama3_hotpotqa.py
+```
+
+**4. Evaluate both models with the same metrics**
+
+```bash
+# SFT evaluation (Exact Match + F1)
+cd ../sft
+python evaluate_hotpotqa_llama3.py
+
+# GRPO evaluation (same Exact Match + F1 metrics)
+cd ../grpo
+python evaluate_hotpotqa_llama3.py
+```
+
+Both evaluation scripts produce JSON result files and a human-readable predictions file in their respective `evaluation_results_*` directories, so the numbers can be compared directly.
+
+The same four-step workflow applies for **Musique** and **TriviaQA** by swapping the `hotpotqa` scripts for their `musique` / `triviaqa` counterparts.
+
 ## Developing
 
 ### Installing dependencies
